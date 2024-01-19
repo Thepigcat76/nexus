@@ -1,0 +1,67 @@
+name: Rust Release Build
+
+on:
+  push:
+    branches:
+      - main  # Adjust this based on your main branch name
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Set up Rust
+      uses: actions/setup-rust@v1
+      with:
+        profile: stable
+
+    - name: Build Release Binary
+      run: cargo build --release
+
+    - name: Archive Release Binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: my_program-${{ github.sha }}
+        path: target/release/my_program  # Adjust the path based on your project structure
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Download Release Binary
+      uses: actions/download-artifact@v2
+      with:
+        name: my_program-${{ github.sha }}
+        path: target/release/  # Adjust the path based on your project structure
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.sha }}
+        release_name: Release ${{ github.sha }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: target/release/my_program
+        asset_name: my_program
+        asset_content_type: application/octet-stream
