@@ -3,7 +3,7 @@ name: Rust Release Build
 on:
   push:
     branches:
-      - main  # Adjust this based on your main branch name
+      - master  # Adjust this based on your main branch name
   release:
     types:
       - created
